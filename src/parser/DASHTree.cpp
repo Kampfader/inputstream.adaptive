@@ -883,7 +883,10 @@ void adaptive::CDashTree::ParseTagRepresentation(pugi::xml_node nodeRepr,
 
       std::string media;
       if (XML::QueryAttrib(node, "media", media))
+      {
         seg.url = media;
+        repr->SetHasSegmentsUrl(true);
+      }
 
       bool isTimelineEmpty = repr->SegmentTimeline().IsEmpty();
 
@@ -1569,19 +1572,27 @@ void adaptive::CDashTree::RefreshLiveSegments()
 
                 auto updSegmentIt(updReprSegTL.GetData().begin());
                 for (; updSegmentIt != updReprSegTL.GetData().end() && repFreeSegments != 0;
-                     updSegmentIt++)
+                      updSegmentIt++)
                 {
                   LOG::LogF(LOGDEBUG, "Insert representation (id: %s url: %s)",
                             updRepr->GetId().data(), updSegmentIt->url.c_str());
-
-                  CSegment* segment = repr->SegmentTimeline().Get(0);
-                  if (segment)
+                  if (repr->HasSegmentsUrl())
+                  {
+                    CSegment* segment = repr->SegmentTimeline().Get(0);
+                    if (!segment)
+                    {
+                      LOG::LogF(LOGERROR,
+                                "Segment at position 0 not found from representation id: %s",
+                                repr->GetId().data());
+                      return;
+                    }
                     segment->url.clear();
-
+                  }
                   updSegmentIt->startPTS_ += ptsOffset;
                   repr->SegmentTimeline().Insert(*updSegmentIt);
 
-                  updSegmentIt->url.clear();
+                  if (repr->HasSegmentsUrl())
+                    updSegmentIt->url.clear();
 
                   repr->SetStartNumber(repr->GetStartNumber() + 1);
                   repFreeSegments--;

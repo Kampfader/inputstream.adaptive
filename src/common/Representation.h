@@ -128,6 +128,9 @@ public:
   bool HasInitPrefixed() const { return m_hasInitPrefixed; }
   void SetHasInitPrefixed(bool hasInitPrefixed) { m_hasInitPrefixed = hasInitPrefixed; }
 
+  bool HasSegmentsUrl() const { return m_hasSegmentsUrl; }
+  void SetHasSegmentsUrl(bool hasSegmentsUrl) { m_hasSegmentsUrl = hasSegmentsUrl; }
+
   // Currently used for HLS only
   bool IsPrepared() const { return m_isPrepared; }
   // Currently used for HLS only
@@ -279,6 +282,8 @@ protected:
 
   bool m_isSubtitleFileStream{false};
   bool m_hasInitPrefixed{false};
+
+  bool m_hasSegmentsUrl{false};
 
   bool m_isPrepared{false};
   bool m_isEnabled{false};

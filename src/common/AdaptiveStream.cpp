@@ -244,6 +244,7 @@ bool AdaptiveStream::PrepareDownload(const PLAYLIST::CRepresentation* rep,
                                      const PLAYLIST::CSegment& seg,
                                      DownloadInfo& downloadInfo)
 {
+  std::string rangeHeader;
   std::string streamUrl;
 
   if (rep->HasSegmentTemplate())
@@ -272,11 +273,9 @@ bool AdaptiveStream::PrepareDownload(const PLAYLIST::CRepresentation* rep,
   if (URL::IsUrlRelative(streamUrl))
     streamUrl = URL::Join(rep->GetBaseUrl(), streamUrl);
 
-  if (seg.HasByteRange())
+  if (seg.range_begin_ != NO_VALUE)
   {
-    std::string rangeHeader;
     uint64_t fileOffset = seg.IsInitialization() ? 0 : m_segmentFileOffset;
-
     if (seg.range_end_ != NO_VALUE)
     {
       rangeHeader = StringUtils::Format("bytes=%llu-%llu", seg.range_begin_ + fileOffset,
@@ -286,9 +285,10 @@ bool AdaptiveStream::PrepareDownload(const PLAYLIST::CRepresentation* rep,
     {
       rangeHeader = StringUtils::Format("bytes=%llu-", seg.range_begin_ + fileOffset);
     }
-
-    downloadInfo.m_addHeaders["Range"] = rangeHeader;
   }
+
+  if (!rangeHeader.empty())
+    downloadInfo.m_addHeaders["Range"] = rangeHeader;
 
   downloadInfo.m_url = tree_.BuildDownloadUrl(streamUrl);
   return true;
@@ -301,7 +301,8 @@ void AdaptiveStream::ResetSegment(const PLAYLIST::CSegment* segment)
   if (segment)
   {
     if (!current_rep_->HasSegmentBase() && !current_rep_->HasSegmentTemplate() &&
-        segment->url.empty() && current_rep_->GetContainerType() != ContainerType::TS)
+        !current_rep_->HasSegmentsUrl() &&
+        current_rep_->GetContainerType() != ContainerType::TS)
     {
       absolute_position_ = segment->range_begin_;
     }

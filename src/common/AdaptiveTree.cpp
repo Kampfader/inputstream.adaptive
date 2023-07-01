@@ -103,7 +103,7 @@ namespace adaptive
                                          uint32_t fragmentDuration,
                                          uint32_t movie_timescale)
   {
-    if (!m_isLive || HasManifestUpdatesSegs())
+    if (!m_isLive || HasManifestUpdatesSegs() || repr->HasSegmentsUrl())
       return;
 
     // Check if its the last frame we watch
@@ -137,9 +137,6 @@ namespace adaptive
                 repr->GetId().data());
       return;
     }
-
-    if (segment->HasByteRange())
-      return;
 
     CSegment segCopy = *segment;
 
